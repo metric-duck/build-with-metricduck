@@ -1,0 +1,7 @@
+# Lab 1: PE Ratio Alert - Dependencies
+
+# HTTP client for API requests
+httpx>=0.25.0
+
+# Environment variable management
+python-dotenv>=1.0.0

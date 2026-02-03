@@ -1,0 +1,53 @@
+# Lab 1: Free PE Alert - Daily GitHub Actions Workflow
+#
+# This runs your PE alert script daily at 6 PM ET (after market close).
+# GitHub Actions is FREE for public repositories!
+#
+# Setup:
+# 1. Fork this repo to your GitHub account
+# 2. Go to Settings > Secrets and variables > Actions
+# 3. Add these secrets for email notifications:
+#    - EMAIL_USER: your_email@gmail.com
+#    - EMAIL_PASSWORD: your_gmail_app_password
+#    - EMAIL_TO: recipient@example.com
+# 4. Go to Actions tab and enable workflows
+#
+# That's it! You'll get daily PE alerts via email.
+
+name: Daily PE Alert
+
+on:
+  # Run daily at 6 PM ET (23:00 UTC during EST, 22:00 UTC during EDT)
+  schedule:
+    - cron: '0 23 * * 1-5'  # Weekdays only (Mon-Fri)
+
+  # Allow manual runs for testing
+  workflow_dispatch:
+
+jobs:
+  check-pe-ratios:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd labs/01-free-pe-alert
+          pip install -r requirements.txt
+
+      - name: Run PE Alert
+        env:
+          EMAIL_ENABLED: ${{ secrets.EMAIL_USER != '' && 'true' || 'false' }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: |
+          cd labs/01-free-pe-alert
+          python alert.py
