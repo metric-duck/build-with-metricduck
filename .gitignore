@@ -24,3 +24,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Draft labs (not yet published)
+labs/01-free-pe-alert/
+labs/11-dividend-yield-alert/
+labs/12-quality-watchlist/
+labs/ROADMAP.md

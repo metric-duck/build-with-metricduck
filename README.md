@@ -10,39 +10,32 @@ Practical labs for building stock screeners and alerts.
 
 | Lab | Description | Tier | Complexity |
 |-----|-------------|------|------------|
-| [01 - Free PE Alert](./labs/01-free-pe-alert/) | Alert when PE drops below threshold (yfinance) | **FREE** | Simple |
 | [02 - Stock Showdown](./labs/02-stock-showdown/) | Compare two stocks head-to-head + historical context | **FREE** | Simple |
 | [10 - PE Alert (API)](./labs/10-pe-ratio-alert/) | PE alert with 200+ metrics | Builder | Simple |
-| [11 - Dividend Yield Alert](./labs/11-dividend-yield-alert/) | Alert when yield rises above threshold | Builder | Simple |
-| [12 - Quality Watchlist](./labs/12-quality-watchlist/) | Monitor ROIC for quality stocks | Builder | Simple |
-| 13 - GARP Screener | Find growth at reasonable price | Builder | Simple |
-| 14 - Historical Value | Alert when valuation below historical avg | Builder | Moderate |
 | [50 - Enterprise Screener](./labs/50-enterprise-screener/) | Advanced screening with full API | Enterprise | Advanced |
 
 ## Quick Start (Free)
 
-**No subscription required!** Lab 1 uses yfinance (free) with GitHub Actions for daily alerts.
+**No subscription required!** Lab 02 uses yfinance (free) - no API key needed.
 
 ```bash
 # Clone the repo
 git clone https://github.com/metricduck/metric-duck-public.git
 cd metric-duck-public
 
-# Start with Lab 1 (FREE)
-cd labs/01-free-pe-alert
+# Start with Lab 02 (FREE)
+cd labs/02-stock-showdown
 pip install -r requirements.txt
 
-# Run the alert
-python alert.py
+# Compare any two stocks
+python showdown.py NVDA AMD
 ```
-
-**Want daily alerts?** Fork this repo, add email secrets, enable GitHub Actions. See [Lab 1 README](./labs/01-free-pe-alert/) for details.
 
 ## Why Upgrade to MetricDuck API?
 
-Labs 01-02 are free and work great. Labs 10+ use the MetricDuck API for:
+Lab 02 is free and works great. Labs 10+ use the MetricDuck API for:
 
-| Feature | Labs 01-02 (yfinance) | Labs 10+ (MetricDuck) |
+| Feature | Lab 02 (yfinance) | Labs 10+ (MetricDuck) |
 |---------|------------------|---------------------|
 | Metrics available | ~20 | 200+ |
 | Historical data | Limited | 7 years |
@@ -69,7 +62,7 @@ Labs 01-02 are free and work great. Labs 10+ use the MetricDuck API for:
 
 ## Free Stack
 
-Labs 01-02 demonstrate a complete free stack:
+Lab 02 demonstrates a complete free stack:
 
 - **Data:** yfinance (free, unlimited for personal use)
 - **Email:** Gmail SMTP (free)

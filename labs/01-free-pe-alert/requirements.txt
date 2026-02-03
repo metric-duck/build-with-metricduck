@@ -1,8 +1,0 @@
-# Lab 1: Free PE Alert - Dependencies
-# All free, no API keys required!
-
-# Yahoo Finance data (free, unlimited for personal use)
-yfinance>=0.2.36
-
-# Environment variable management
-python-dotenv>=1.0.0
