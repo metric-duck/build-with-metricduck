@@ -1,0 +1,42 @@
+# Lab 10: Daily MetricDuck Sync
+# Runs weekdays after US market close using delta sync to save credits.
+
+name: Daily MetricDuck Sync
+
+on:
+  schedule:
+    - cron: '0 23 * * 1-5'  # 6 PM ET weekdays
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r labs/10-enterprise-screener/requirements.txt
+
+      - name: Run sync
+        env:
+          METRICDUCK_API_KEY: ${{ secrets.METRICDUCK_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python labs/10-enterprise-screener/sync_service.py \
+            --delta \
+            --top-n 500 \
+            --metrics pe_ratio roic gross_margin fcf_yield revenues net_income
+
+      - name: Notify on failure
+        if: failure() && env.SLACK_WEBHOOK != ''
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          curl -X POST "$SLACK_WEBHOOK" \
+            -H 'Content-Type: application/json' \
+            -d '{"text": "MetricDuck sync failed"}'

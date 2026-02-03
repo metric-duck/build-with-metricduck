@@ -1,0 +1,10 @@
+# Lab 10: Enterprise Screener Dependencies
+
+# HTTP client for API calls
+httpx>=0.25.0
+
+# Supabase client
+supabase>=2.0.0
+
+# Environment variables
+python-dotenv>=1.0.0
