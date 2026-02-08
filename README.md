@@ -1,80 +1,69 @@
 # MetricDuck Labs
 
-Practical labs for building stock screeners and alerts.
+Practical labs for building stock analysis tools with the [MetricDuck API](https://www.metricduck.com).
 
-**Start free, upgrade when you need more.**
+**No API key required.** Guest access gives you all 70 metrics and 12 statistical dimensions.
 
 ## Labs
 
-**Numbering:** 01-09 Free | 10-49 Builder ($29/mo) | 50+ Enterprise
+### Free Labs (no API key needed)
 
-| Lab | Description | Tier | Complexity |
-|-----|-------------|------|------------|
-| [02 - Stock Showdown](./labs/02-stock-showdown/) | Compare two stocks head-to-head + historical context | **FREE** | Simple |
-| [10 - PE Alert (API)](./labs/10-pe-ratio-alert/) | PE alert with 200+ metrics | Builder | Simple |
-| [50 - Enterprise Screener](./labs/50-enterprise-screener/) | Advanced screening with full API | Enterprise | Advanced |
+| Lab | Description | What You'll Build |
+|-----|-------------|-------------------|
+| [02 - Stock Showdown](./labs/02-stock-showdown/) | Compare two stocks on Valuation + Quality | 2-panel comparison with 7 metrics (5 exclusive) |
+| [03 - Stock Pulse](./labs/03-stock-pulse/) | Check any stock vs its own 2-year history | Historical analysis with Q.MED8 and Q.TREND8 |
 
-## Quick Start (Free)
+### Builder Labs (API key required, $29/mo)
 
-**No subscription required!** Lab 02 uses yfinance (free) - no API key needed.
+| Lab | Description | What You'll Build |
+|-----|-------------|-------------------|
+| [10 - PE Alert](./labs/10-pe-ratio-alert/) | Alert when PE drops below threshold | Automated valuation monitoring |
+| [11 - Dividend Yield Alert](./labs/11-dividend-yield-alert/) | Alert on dividend yield changes | Income investing alerts |
+| [12 - Quality Watchlist](./labs/12-quality-watchlist/) | Track ROIC and quality metrics | Portfolio quality monitoring |
+
+### Enterprise Labs
+
+| Lab | Description |
+|-----|-------------|
+| [50 - Enterprise Screener](./labs/50-enterprise-screener/) | Advanced screening with bulk data access |
+
+## Quick Start
 
 ```bash
-# Clone the repo
-git clone https://github.com/metricduck/metric-duck-public.git
-cd metric-duck-public
-
-# Start with Lab 02 (FREE)
-cd labs/02-stock-showdown
+git clone https://github.com/metric-duck/build-with-metricduck.git
+cd build-with-metricduck/labs/02-stock-showdown
 pip install -r requirements.txt
-
-# Compare any two stocks
 python showdown.py NVDA AMD
 ```
 
-## Why Upgrade to MetricDuck API?
+Works immediately. No API key, no signup, no config.
 
-Lab 02 is free and works great. Labs 10+ use the MetricDuck API for:
+## What MetricDuck Provides That yfinance Can't
 
-| Feature | Lab 02 (yfinance) | Labs 10+ (MetricDuck) |
-|---------|------------------|---------------------|
-| Metrics available | ~20 | 200+ |
-| Historical data | Limited | 7 years |
-| Data source | Yahoo Finance | SEC filings |
-| Accuracy | Good | High |
-| Statistical dimensions | None | Trend, Avg, StdDev |
+5 of the 7 metrics in Stock Showdown are not available in yfinance:
 
-## Getting Your API Key (Labs 10+)
+- **ROIC** - Return on Invested Capital
+- **FCF Margin** - Free cash flow as % of revenue
+- **FCF Yield** - Free cash flow / market cap
+- **EV/EBIT** - Enterprise value / operating income
+- **Total Shareholder Yield** - Dividends + buybacks + debt paydown
 
-1. Sign up for a [Builder subscription](https://www.metricduck.com/pricing) ($29/month)
-2. Go to your [Dashboard](https://www.metricduck.com/dashboard)
-3. Navigate to API Keys section
-4. Generate a new API key
+## API Access
 
-## API Limits (Builder Tier)
+| Tier | Access | Cost |
+|------|--------|------|
+| Guest (no key) | All 70 metrics, 5 req/min | Free |
+| Free (registered) | 500 credits/month | Free |
+| Builder | 200,000 credits/month, 300 req/min | $29/mo |
+| Production | 1,000,000 credits/month, 1,000 req/min | $79/mo |
 
-| Limit | Value |
-|-------|-------|
-| Tickers per request | 25 |
-| Metrics per request | 100 |
-| Years of history | 7 |
-| Monthly requests | 5,000 |
-| Rate limit | 300/min |
+[Get an API key](https://www.metricduck.com/auth/register)
 
-## Free Stack
+## Links
 
-Lab 02 demonstrates a complete free stack:
-
-- **Data:** yfinance (free, unlimited for personal use)
-- **Email:** Gmail SMTP (free)
-- **Scheduling:** GitHub Actions (free for public repos)
-
-No credit card required. Try it today.
-
-## Support
-
+- [Full metric catalog](https://www.metricduck.com/metrics) - Browse all 70 API metrics
 - [API Documentation](https://www.metricduck.com/docs)
-- [MetricDuck Discord](https://discord.gg/metricduck)
-- [GitHub Issues](https://github.com/metricduck/metric-duck-public/issues)
+- [Blog tutorials](https://www.metricduck.com/blog/build-it-with-metricduck)
 
 ## License
 

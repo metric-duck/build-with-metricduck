@@ -1,195 +1,149 @@
-# Lab 02: Stock Showdown - Compare Stocks & Find Better Value
+# Lab 02: Stock Showdown - Two-Panel Stock Comparison
 
-**Which stock should you buy? Find out in seconds.**
+**Which stock should you buy? Not just cheaper — better.**
 
-Compare any two stocks on valuation metrics AND historical context to find the better value opportunity. No signup required, completely free.
-
-## What Makes This Different
-
-Most stock comparison tools just show raw numbers. Stock Showdown goes further:
-
-- **Raw Metrics** - PE, Dividend Yield, Price/Book side-by-side
-- **Historical Context** - Is it cheap vs its OWN 52-week range?
-- **Smart Verdict** - Clear recommendation, not just numbers
+Compare any two stocks across Valuation and Business Quality using metrics
+that free alternatives like yfinance can't provide.
 
 ## Quick Start
 
 **Requirements:** Python 3.10+
 
 ```bash
-# 1. Install dependencies
 pip install -r requirements.txt
-
-# 2. Compare any two stocks
 python showdown.py NVDA AMD
-
-# Or use the default comparison (AAPL vs MSFT)
-python showdown.py
 ```
+
+No API key required. All 70 metrics are free via guest access.
+
+**Optional:** Install yfinance for supplementary market context (sector, beta, 52-week range):
+
+```bash
+pip install yfinance
+```
+
+## What This Does That yfinance Can't
+
+| Metric | yfinance | MetricDuck | Why It Matters |
+|--------|----------|------------|----------------|
+| **ROIC** | Not available | Yes | The single best measure of business quality |
+| **FCF Yield** | Not available | Yes | Free cash flow relative to market cap |
+| **EV/EBIT** | Not available | Yes | Valuation using operating income |
+| **Total Shareholder Yield** | Not available | Yes | Dividends + buybacks combined |
+| **FCF Margin** | Not pre-computed | Yes | Cash generation efficiency |
+
+Metrics marked `*` in the output are MetricDuck exclusives.
 
 ## Example Output
 
 ```
-══════════════════════════════════════════════════════════════════
-                    STOCK SHOWDOWN: AAPL vs MSFT
-══════════════════════════════════════════════════════════════════
+======================================================================
+                   STOCK SHOWDOWN: AAPL vs MSFT
+======================================================================
 
 COMPANY INFO
-──────────────────────────────────────────────────────────────────
-                                 AAPL                 MSFT
-Name                        Apple Inc       Microsoft Corp
-Sector                     Technology           Technology
-Market Cap                     $3.4T               $3.1T
+----------------------------------------------------------------------
+                                    AAPL                   MSFT
+Name                           Apple Inc         Microsoft Corp
 
-VALUATION METRICS
-──────────────────────────────────────────────────────────────────
-                            AAPL            MSFT     Better Value
-──────────────────────────────────────────────────────────────────
-PE Ratio                   28.50           35.20          AAPL ✓
-Forward PE                 26.10           30.80          AAPL ✓
-Div Yield                  0.52%           0.74%          MSFT ✓
-Price/Book                 45.20           12.30          MSFT ✓
-Price/Sales                 7.20           11.50          AAPL ✓
-EV/EBITDA                  22.10           25.80          AAPL ✓
+PANEL 1: VALUATION  (Who's cheaper today?)
+----------------------------------------------------------------------
+                            AAPL           MSFT     Better Value
+----------------------------------------------------------------------
+PE Ratio                   37.18          24.99         MSFT ->
+EV/EBITDA                  23.97          18.29         MSFT ->
+EV/EBIT *                  26.08          23.70         MSFT ->
+FCF Yield *                 2.7%           3.0%         MSFT ->
+                                             Valuation: MSFT 4-0
 
-HISTORICAL CONTEXT (52-Week Range Position)
-──────────────────────────────────────────────────────────────────
-                                 AAPL                 MSFT
-Current Price                 $185.50              $420.30
-52-Week Low                   $164.08              $385.12
-52-Week High                  $199.62              $468.35
-Position              Near 52-wk high (82%)   Mid-range (42%)
+PANEL 2: QUALITY  (Who's the better business?)
+----------------------------------------------------------------------
+                            AAPL           MSFT   Better Quality
+----------------------------------------------------------------------
+ROIC *                     52.3%          25.1%         <- AAPL
+FCF Margin *               26.4%          33.2%         MSFT ->
+Shareholder Yield *         3.8%           2.1%         <- AAPL
+                                               Quality: AAPL 2-1
 
-VALUATION VERDICT
-──────────────────────────────────────────────────────────────────
-AAPL     [▓▓▓▓▓▓▓▓░░]  Expensive
-MSFT     [▓▓▓▓░░░░░░]  Fair Value
+======================================================================
+VERDICT
+----------------------------------------------------------------------
+Valuation: MSFT is clearly cheaper (4 of 4 metrics)
+Quality:   AAPL is stronger (2 of 3 metrics) -- ROIC 52.3% vs 25.1%
 
-══════════════════════════════════════════════════════════════════
-FINAL VERDICT
-──────────────────────────────────────────────────────────────────
-Raw Metrics Winner: AAPL (4 of 6 metrics)
+AAPL has higher quality, MSFT is cheaper.
+Classic value-vs-quality tradeoff.
 
-But consider this:
-  • AAPL is trading Near 52-wk high (82%) - potentially stretched
-  • MSFT is trading Mid-range (42%) - better entry point
+But is the cheaper stock cheap by its OWN standards?
+Try Lab 03 (Stock Pulse) to check any stock vs its 2-year history.
 
-RECOMMENDATION: MSFT may offer better value right now.
-You'd be buying at a lower point in its historical range.
+----------------------------------------------------------------------
+* = MetricDuck exclusive (not available in yfinance)
 
-══════════════════════════════════════════════════════════════════
+  Data: SEC filings via MetricDuck API (free, no key needed)
+  70 metrics available: https://www.metricduck.com/metrics
+======================================================================
 ```
 
-## Popular Comparisons to Try
+## Popular Comparisons
 
-| Matchup | Command | Use Case |
-|---------|---------|----------|
-| NVDA vs AMD | `python showdown.py NVDA AMD` | GPU rivals - who's the better AI play? |
-| GOOGL vs META | `python showdown.py GOOGL META` | Ad tech giants - which is cheaper? |
-| TSLA vs RIVN | `python showdown.py TSLA RIVN` | EV makers - growth vs value |
-| JPM vs BAC | `python showdown.py JPM BAC` | Big banks - quality vs price |
-| COST vs WMT | `python showdown.py COST WMT` | Retail giants - which is undervalued? |
-| V vs MA | `python showdown.py V MA` | Payment networks - duopoly comparison |
-| DIS vs NFLX | `python showdown.py DIS NFLX` | Streaming wars - who's winning? |
-| PFE vs JNJ | `python showdown.py PFE JNJ` | Pharma giants - value play? |
+| Matchup | Command | What You'll Learn |
+|---------|---------|-------------------|
+| NVDA vs AMD | `python showdown.py NVDA AMD` | GPU rivals: who has better ROIC? |
+| GOOGL vs META | `python showdown.py GOOGL META` | Ad tech: valuation vs capital returns |
+| JPM vs BAC | `python showdown.py JPM BAC` | Banks: quality comparison (ROIC may be N/A) |
+| COST vs WMT | `python showdown.py COST WMT` | Retail: FCF efficiency showdown |
+| V vs MA | `python showdown.py V MA` | Payments: the duopoly comparison |
+| TSLA vs RIVN | `python showdown.py TSLA RIVN` | EV makers: profitability gap |
 
-## Understanding the Output
+## Understanding the Metrics
 
-### Valuation Metrics
+### Panel 1: Valuation (lower = cheaper, except FCF Yield)
 
-| Metric | What It Measures | Better Value? |
-|--------|------------------|---------------|
-| **PE Ratio** | Price relative to earnings | Lower - cheaper per $1 of profit |
-| **Forward PE** | Expected future PE | Lower - cheaper vs future earnings |
-| **Div Yield** | Annual dividends / price | Higher - more income per $1 invested |
-| **Price/Book** | Price vs company assets | Lower - closer to asset value |
-| **Price/Sales** | Price vs revenue | Lower - cheaper per $1 of sales |
-| **EV/EBITDA** | Enterprise value vs cash flow | Lower - cheaper cash flow |
+| Metric | What It Measures |
+|--------|------------------|
+| **PE Ratio** | Price per $1 of earnings |
+| **EV/EBITDA** | Enterprise value per $1 of cash earnings |
+| **EV/EBIT** * | Enterprise value per $1 of operating income |
+| **FCF Yield** * | Free cash flow as % of market cap (higher = better value) |
 
-### Historical Context
+### Panel 2: Business Quality (higher = better)
 
-Shows where each stock is trading within its 52-week price range:
+| Metric | What It Measures |
+|--------|------------------|
+| **ROIC** * | Return on Invested Capital — how well the business uses its capital |
+| **FCF Margin** * | Free cash flow as % of revenue — cash generation efficiency |
+| **Shareholder Yield** * | Dividends + buybacks as % of market cap — total capital returned |
 
-- **Near 52-week high (>85%)** - Expensive, potentially overextended
-- **Upper half (65-85%)** - Pricey, showing strength
-- **Mid-range (45-65%)** - Fair value
-- **Lower half (25-45%)** - Fair value, potential opportunity
-- **Near 52-week low (<25%)** - Cheap, potential value (or trouble)
-
-### The Verdict
-
-The tool combines raw metrics AND historical context:
-
-1. **Metrics winner** - Who wins more valuation comparisons
-2. **Historical check** - Is the winner actually at a good entry point?
-3. **Smart recommendation** - Considers both factors
-
-A stock can win on metrics but still be expensive vs its own history!
-
-## How It Works
-
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   yfinance      │ --> │   showdown.py   │ --> │  Smart Verdict  │
-│   (free API)    │     │   (compare)     │     │  + Recommendation│
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-        │                       │                       │
-   Free data              Compare metrics          Historical
-   No API key             + 52-week range         context check
-```
-
-## Limitations
-
-- Historical context uses 52-week range (yfinance limitation)
-- **Dividend Yield** shows N/A or 0% for growth stocks that don't pay dividends (TSLA, NVDA, etc.)
-- **EV/EBITDA** shows N/A for banks (EBITDA isn't meaningful for financials)
-- Does not account for business quality, growth prospects, or sector differences
-
-**For deeper analysis:**
-- 5+ years of historical PE data
-- 200+ fundamental metrics
-- SEC-filed data accuracy
-
-Try [MetricDuck API](https://www.metricduck.com) for professional-grade analysis.
+All data uses **Trailing Twelve Months (TTM)** from SEC filings with today's market price.
 
 ## Customization
 
-Edit `showdown.py` to change default stocks:
-
-```python
-# Default stocks to compare
-STOCK_A = "NVDA"
-STOCK_B = "AMD"
-```
-
-Or add/remove metrics:
+Edit the metric lists in `showdown.py` to add metrics from the [full catalog](https://www.metricduck.com/metrics) (70 metrics available):
 
 ```python
 VALUATION_METRICS = [
-    ("PE Ratio", "trailingPE", "lower"),
-    ("Forward PE", "forwardPE", "lower"),
-    ("Div Yield", "dividendYield", "higher"),  # Higher yield = more income
-    ("Price/Book", "priceToBook", "lower"),
-    ("Price/Sales", "priceToSalesTrailing12Months", "lower"),
-    ("EV/EBITDA", "enterpriseToEbitda", "lower"),
+    ("PE Ratio", "pe_ratio", "lower", False),
+    ("EV/EBITDA", "ev_ebitda", "lower", False),
+    ("EV/EBIT", "ev_ebit", "lower", True),     # True = MetricDuck exclusive
+    ("FCF Yield", "fcf_yield", "higher", True),
 ]
 ```
 
+## Data Source
+
+MetricDuck computes all metrics from **SEC filings** (10-K, 10-Q) using standardized
+XBRL extraction. This means consistent cross-company comparisons, not scraped or estimated data.
+
 ## Next Steps
 
-- [Lab 01: Free PE Alert](../01-free-pe-alert/) - Get alerts when stocks get cheap
-- [Lab 10: PE Alert with API](../10-pe-ratio-alert/) - 200+ metrics, higher accuracy
+- **Lab 03: Stock Pulse** — Check any stock vs its own 2-year history
+- [Full metric catalog](https://www.metricduck.com/metrics) — Browse all 70 API metrics
 
 ## Troubleshooting
 
-### "Could not fetch data for TICKER"
+**"Could not connect to MetricDuck API"** — Check your internet connection.
 
-- Check the ticker symbol is correct
-- Use the main listing symbol (e.g., `BRK-B` not `BRK.B`)
-- Some international stocks may not be available
+**"Rate limit reached"** — Guest access allows 5 requests/minute. Wait and retry.
 
-### Missing metric values
-
-- Some stocks don't report all metrics (e.g., banks don't have EBITDA)
-- Growth stocks that don't pay dividends will show N/A or 0% for Dividend Yield
-- The tool handles missing data gracefully and excludes from comparison
+**Missing metric values (N/A)** — Some stocks don't report all metrics (e.g., banks may not have EBITDA or ROIC). The tool handles this gracefully.
