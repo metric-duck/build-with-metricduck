@@ -1,5 +1,5 @@
 """
-Lab 10: MetricDuck Sync Service
+Lab 50: MetricDuck Sync Service
 Syncs fundamental data from MetricDuck to your Supabase database.
 
 Supports both full syncs (initial load) and delta syncs (daily updates).

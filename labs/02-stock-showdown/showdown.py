@@ -86,8 +86,9 @@ def fetch_stock_data(ticker_a: str, ticker_b: str) -> dict | None:
             params={
                 "tickers": f"{ticker_a},{ticker_b}",
                 "metrics": ",".join(ALL_METRIC_IDS),
-                "period": "ttm",
-                "price": "current",
+                "period": "ttm",      # Trailing Twelve Months
+                "price": "current",   # Recompute valuations at today's price
+                "years": 1,           # 1 year of history
             },
             headers=headers,
             timeout=30.0,
@@ -104,17 +105,52 @@ def fetch_stock_data(ticker_a: str, ticker_b: str) -> dict | None:
             except Exception:
                 detail = {}
 
-            if isinstance(detail, dict) and detail.get("error") == "Insufficient credits":
-                print(f"Monthly credit limit reached ({detail.get('monthly_limit', '?')} credits).")
-                print("Upgrade at https://www.metricduck.com/pricing")
+            if isinstance(detail, dict):
+                error = detail.get("error", "")
+                if error == "Daily credit limit reached":
+                    print(f"Daily credit limit reached "
+                          f"({detail.get('daily_limit', '?')} credits/day).",
+                          file=sys.stderr)
+                    print(f"Resets at {detail.get('resets_at', 'midnight UTC')}.",
+                          file=sys.stderr)
+                    print("Upgrade: https://www.metricduck.com/pricing",
+                          file=sys.stderr)
+                elif error == "Insufficient credits":
+                    print(f"Monthly credit limit reached "
+                          f"({detail.get('monthly_limit', '?')} credits).",
+                          file=sys.stderr)
+                    print("Upgrade at https://www.metricduck.com/pricing",
+                          file=sys.stderr)
+                elif error == "Daily request limit reached":
+                    limit = detail.get("daily_limit", 5)
+                    print(f"Daily request limit reached ({limit}/day for guests).",
+                          file=sys.stderr)
+                    print("Register free for 500 credits/day: "
+                          "https://www.metricduck.com/auth/register",
+                          file=sys.stderr)
+                else:
+                    print(f"Rate limit reached. Wait {retry_after}s and try again.",
+                          file=sys.stderr)
+                    print("Register free for higher limits: "
+                          "https://www.metricduck.com/auth/register",
+                          file=sys.stderr)
             else:
-                print(f"Rate limit reached. Wait {retry_after} seconds and try again.")
-                print("Register free for higher limits: https://www.metricduck.com/auth/register")
+                print(f"Rate limit reached. Wait {retry_after}s and try again.",
+                      file=sys.stderr)
             sys.exit(1)
 
         if response.status_code != 200:
-            print(f"Error: API returned {response.status_code}")
-            print(response.text[:500])
+            print(f"Error: API returned {response.status_code}",
+                  file=sys.stderr)
+            try:
+                detail = response.json().get("detail", {})
+                if isinstance(detail, dict):
+                    print(detail.get("error", response.text[:200]),
+                          file=sys.stderr)
+                else:
+                    print(str(detail)[:200], file=sys.stderr)
+            except Exception:
+                print(response.text[:200], file=sys.stderr)
             sys.exit(1)
 
         return response.json()
@@ -417,24 +453,49 @@ def build_comparison_data(
     return result
 
 
+def display_dry_run(stock_a: str, stock_b: str):
+    """Show estimated credit cost without making API calls."""
+    credits = 2 * len(ALL_METRIC_IDS) * 1  # 2 tickers × metrics × 1 year
+    api_key = os.getenv("METRICDUCK_API_KEY")
+
+    print()
+    print("Dry run — no API calls made.")
+    print()
+    print(f"Request: {stock_a} vs {stock_b}")
+    print(f"  2 tickers x {len(ALL_METRIC_IDS)} metrics x 1 year (TTM)")
+    print(f"  Estimated cost: ~{credits} credits")
+    print()
+    if not api_key:
+        print("  Guest (no key):     No credit cost (5 requests/day limit)")
+    print(f"  Free (registered):  {credits} of 500 daily credits")
+    print(f"  Formula:            tickers x metrics x years")
+    print()
+
+
 def main():
     """Main entry point."""
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     json_output = "--json" in sys.argv
+    dry_run = "--dry-run" in sys.argv
 
     if len(args) == 2:
         stock_a, stock_b = args[0].upper(), args[1].upper()
     elif len(args) == 0:
         stock_a, stock_b = STOCK_A, STOCK_B
     else:
-        print("Usage: python showdown.py [TICKER1 TICKER2] [--json]")
+        print("Usage: python showdown.py [TICKER1 TICKER2] [--json] [--dry-run]")
         print("Example: python showdown.py NVDA AMD")
         print("         python showdown.py NVDA AMD --json")
+        print("         python showdown.py --dry-run")
         sys.exit(1)
 
     if stock_a == stock_b:
         print(f"Error: Cannot compare {stock_a} to itself!", file=sys.stderr)
         sys.exit(1)
+
+    if dry_run:
+        display_dry_run(stock_a, stock_b)
+        sys.exit(0)
 
     if not json_output:
         print(f"Fetching data for {stock_a} and {stock_b}...")

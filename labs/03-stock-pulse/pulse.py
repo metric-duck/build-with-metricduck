@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """
-Lab 03: Stock Pulse - Check Any Stock Against Its Own History
+Lab 03: Stock Pulse - Value Trap Detector
 
-Is AAPL's ROIC improving or declining? Is its FCF margin above or below normal?
-Compare current metrics to 2-year medians and trend directions.
+Check any stock against its own 2-year history. Is ROIC improving
+or declining? Is the valuation expanding or compressing? The diagnosis
+tells you: OPPORTUNITY, EARNING IT, WATCH, VALUE TRAP, or STABLE.
 
 Uses MetricDuck API statistical dimensions (Q.MED8, Q.TREND8)
 that are not available in yfinance or any free alternative.
 
 Usage:
     python pulse.py              # Default: AAPL
-    python pulse.py MSFT         # Any single stock
+    python pulse.py INTC         # Any single stock
+    python pulse.py INTC --json  # Machine-readable output
 """
 
+import json
 import os
 import sys
 
@@ -91,9 +94,10 @@ def fetch_stock_data(ticker: str) -> dict | None:
             params={
                 "tickers": ticker,
                 "metrics": ",".join(ALL_METRIC_IDS),
-                "period": "ttm",
-                "price": "current",
-                "dimensions": ",".join(ALL_DIMENSIONS),
+                "period": "ttm",      # Trailing Twelve Months
+                "price": "current",   # Recompute valuations at today's price
+                "years": 1,           # 1 year of history
+                "dimensions": ",".join(ALL_DIMENSIONS),  # Q.MED8, Q.TREND8, etc.
             },
             headers=headers,
             timeout=30.0,
@@ -110,17 +114,52 @@ def fetch_stock_data(ticker: str) -> dict | None:
             except Exception:
                 detail = {}
 
-            if isinstance(detail, dict) and detail.get("error") == "Insufficient credits":
-                print(f"Monthly credit limit reached ({detail.get('monthly_limit', '?')} credits).")
-                print("Upgrade at https://www.metricduck.com/pricing")
+            if isinstance(detail, dict):
+                error = detail.get("error", "")
+                if error == "Daily credit limit reached":
+                    print(f"Daily credit limit reached "
+                          f"({detail.get('daily_limit', '?')} credits/day).",
+                          file=sys.stderr)
+                    print(f"Resets at {detail.get('resets_at', 'midnight UTC')}.",
+                          file=sys.stderr)
+                    print("Upgrade: https://www.metricduck.com/pricing",
+                          file=sys.stderr)
+                elif error == "Insufficient credits":
+                    print(f"Monthly credit limit reached "
+                          f"({detail.get('monthly_limit', '?')} credits).",
+                          file=sys.stderr)
+                    print("Upgrade at https://www.metricduck.com/pricing",
+                          file=sys.stderr)
+                elif error == "Daily request limit reached":
+                    limit = detail.get("daily_limit", 5)
+                    print(f"Daily request limit reached ({limit}/day for guests).",
+                          file=sys.stderr)
+                    print("Register free for 500 credits/day: "
+                          "https://www.metricduck.com/auth/register",
+                          file=sys.stderr)
+                else:
+                    print(f"Rate limit reached. Wait {retry_after}s and try again.",
+                          file=sys.stderr)
+                    print("Register free for higher limits: "
+                          "https://www.metricduck.com/auth/register",
+                          file=sys.stderr)
             else:
-                print(f"Rate limit reached. Wait {retry_after} seconds and try again.")
-                print("Register free for higher limits: https://www.metricduck.com/auth/register")
+                print(f"Rate limit reached. Wait {retry_after}s and try again.",
+                      file=sys.stderr)
             sys.exit(1)
 
         if response.status_code != 200:
-            print(f"Error: API returned {response.status_code}")
-            print(response.text[:500])
+            print(f"Error: API returned {response.status_code}",
+                  file=sys.stderr)
+            try:
+                detail = response.json().get("detail", {})
+                if isinstance(detail, dict):
+                    print(detail.get("error", response.text[:200]),
+                          file=sys.stderr)
+                else:
+                    print(str(detail)[:200], file=sys.stderr)
+            except Exception:
+                print(response.text[:200], file=sys.stderr)
             sys.exit(1)
 
         return response.json()
@@ -211,6 +250,119 @@ def format_trend(trend_value: float | None) -> str:
 
 
 # =============================================================================
+# DIAGNOSIS
+# =============================================================================
+
+
+def _compute_diagnosis(api_data: dict, ticker: str) -> tuple[str, str]:
+    """
+    Compute the diagnostic signal word and explanation text.
+
+    Returns (signal, diagnosis_text) where signal is one of:
+    OPPORTUNITY, EARNING IT, WATCH, VALUE TRAP, STABLE.
+    """
+    roic_trend = extract_dimension(api_data, ticker, "roic", "Q.TREND8")
+    pe_trend = extract_dimension(api_data, ticker, "pe_ratio", "Q.TREND8")
+
+    if roic_trend is None or pe_trend is None:
+        return "STABLE", (
+            f"{ticker} — insufficient trend data for diagnosis. "
+            "ROIC or PE trend not available."
+        )
+
+    r_trend = format_trend(roic_trend)
+    p_trend = format_trend(pe_trend)
+
+    if r_trend == "Rising" and p_trend == "Falling":
+        return "OPPORTUNITY", (
+            f"{ticker}'s quality is improving while valuation compresses — "
+            "the market may not be pricing in the improvement yet."
+        )
+    elif r_trend == "Falling" and p_trend == "Rising":
+        return "VALUE TRAP", (
+            f"{ticker}'s quality is declining while valuation expands — "
+            "paying more for a deteriorating business. "
+            "Investigate before assuming it's cheap."
+        )
+    elif r_trend == "Rising" and p_trend == "Rising":
+        return "EARNING IT", (
+            f"{ticker}'s quality is improving and the market is recognizing it. "
+            "Is the premium justified?"
+        )
+    elif r_trend == "Falling" and p_trend == "Falling":
+        return "WATCH", (
+            f"{ticker}'s quality and valuation are both declining — "
+            "the market may be right to de-rate. Investigate the cause."
+        )
+    else:
+        return "STABLE", (
+            f"{ticker} shows no strong trend signal — "
+            "ROIC and valuation are both near 2-year norms."
+        )
+
+
+# =============================================================================
+# JSON OUTPUT
+# =============================================================================
+
+
+def build_pulse_data(api_data: dict, ticker: str) -> dict:
+    """Build structured data for JSON output."""
+    signal, diagnosis_text = _compute_diagnosis(api_data, ticker)
+
+    # Vital signs
+    vital_signs = {}
+    for display_name, metric_id, unit_type in VITAL_SIGNS:
+        current = extract_metric(api_data, ticker, metric_id)
+        median = extract_dimension(api_data, ticker, metric_id, "Q.MED8")
+        trend = extract_dimension(api_data, ticker, metric_id, "Q.TREND8")
+        vs_median = None
+        if current is not None and median is not None and median != 0:
+            vs_median = round((current - median) / abs(median), 4)
+        vital_signs[metric_id] = {
+            "label": display_name,
+            "current": current,
+            "median": median,
+            "trend": format_trend(trend).lower() if trend is not None else None,
+            "vs_median": vs_median,
+        }
+
+    # Valuation
+    valuation = {}
+    for display_name, metric_id, unit_type in VALUATION_SNAPSHOT:
+        current = extract_metric(api_data, ticker, metric_id)
+        trend = extract_dimension(api_data, ticker, metric_id, "Q.TREND8")
+        valuation[metric_id] = {
+            "label": display_name,
+            "current": current,
+            "trend": format_trend(trend).lower() if trend is not None else None,
+        }
+
+    # Growth
+    growth = {}
+    for display_name, metric_id, dimension in GROWTH_METRICS:
+        val = extract_dimension(api_data, ticker, metric_id, dimension)
+        growth[dimension.lower()] = {"label": display_name, "value": val}
+
+    # Leverage
+    leverage = {}
+    for display_name, metric_id, unit_type in LEVERAGE_METRICS:
+        current = extract_metric(api_data, ticker, metric_id)
+        leverage[metric_id] = {"label": display_name, "current": current}
+
+    return {
+        "ticker": ticker,
+        "company_name": get_company_name(api_data, ticker),
+        "signal": signal.replace(" ", "_"),
+        "vital_signs": vital_signs,
+        "valuation": valuation,
+        "growth": growth,
+        "leverage": leverage,
+        "diagnosis": diagnosis_text,
+    }
+
+
+# =============================================================================
 # DISPLAY
 # =============================================================================
 
@@ -282,9 +434,11 @@ def display_pulse(api_data: dict, ticker: str):
         print(f"{display_name:18} {'':>10} {'':>10} {format_value(current, unit_type):>16}")
 
     # Diagnosis
+    signal, diagnosis_text = _compute_diagnosis(api_data, ticker)
+
     print()
     print("=" * DISPLAY_WIDTH)
-    print("DIAGNOSIS")
+    print(f"DIAGNOSIS: {signal}")
     print("-" * DISPLAY_WIDTH)
 
     roic_current = extract_metric(api_data, ticker, "roic")
@@ -302,7 +456,6 @@ def display_pulse(api_data: dict, ticker: str):
         else:
             quality = "weak"
 
-        # Compare to median
         if roic_median is not None and roic_median != 0:
             roic_pct = (roic_current - roic_median) / abs(roic_median) * 100
             if roic_pct > 5:
@@ -330,7 +483,7 @@ def display_pulse(api_data: dict, ticker: str):
                 print("market is paying more per dollar of earnings.")
             elif pe_word == "falling":
                 print(f"Valuation trend: PE {pe_current:.1f} and falling —")
-                print("valuation is compressing (could be opportunity).")
+                print("valuation is compressing.")
             else:
                 print(f"Valuation trend: PE {pe_current:.1f}, stable.")
     else:
@@ -338,25 +491,13 @@ def display_pulse(api_data: dict, ticker: str):
 
     # Synthesis
     print()
-    if roic_current is not None and roic_trend is not None and pe_trend is not None:
-        r_trend = format_trend(roic_trend)
-        p_trend = format_trend(pe_trend)
+    print(diagnosis_text)
 
-        if r_trend == "Rising" and p_trend == "Falling":
-            print("Improving quality + compressing valuation =")
-            print("potential opportunity worth investigating.")
-        elif r_trend == "Falling" and p_trend == "Rising":
-            print("Declining quality + expanding valuation =")
-            print("caution warranted.")
-        elif r_trend == "Rising" and p_trend == "Rising":
-            print("Quality improving but valuation expanding too.")
-            print("Market recognizes the improvement — premium justified?")
-        elif r_trend == "Falling" and p_trend == "Falling":
-            print("Quality and valuation both declining.")
-            print("Market may be right to de-rate — investigate cause.")
-        else:
-            print("No strong signal — fundamentals and valuation")
-            print("are both near historical norms.")
+    # Summary line
+    r_word = format_trend(roic_trend).lower() if roic_trend is not None else "n/a"
+    p_word = format_trend(pe_trend).lower() if pe_trend is not None else "n/a"
+    print()
+    print(f"Signal: {signal} | ROIC trend: {r_word} | PE trend: {p_word}")
 
     print()
     print("-" * DISPLAY_WIDTH)
@@ -373,28 +514,68 @@ def display_pulse(api_data: dict, ticker: str):
 # =============================================================================
 
 
+def display_dry_run(ticker: str):
+    """Show estimated credit cost without making API calls."""
+    periods_factor = 1 + len(ALL_DIMENSIONS)  # 1 year + 4 dimensions
+    credits = 1 * len(ALL_METRIC_IDS) * periods_factor
+    api_key = os.getenv("METRICDUCK_API_KEY")
+
+    print()
+    print("Dry run — no API calls made.")
+    print()
+    print(f"Request: {ticker}")
+    print(f"  1 ticker x {len(ALL_METRIC_IDS)} metrics x {periods_factor} "
+          f"periods (1 year + {len(ALL_DIMENSIONS)} dimensions)")
+    print(f"  Estimated cost: ~{credits} credits")
+    print()
+    if not api_key:
+        print("  Guest (no key):     No credit cost (5 requests/day limit)")
+    print(f"  Free (registered):  {credits} of 500 daily credits")
+    print(f"  Formula:            tickers x metrics x (years + dimensions)")
+    print()
+
+
 def main():
     """Main entry point."""
-    if len(sys.argv) == 2:
-        ticker = sys.argv[1].upper()
-    elif len(sys.argv) == 1:
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    json_output = "--json" in sys.argv
+    dry_run = "--dry-run" in sys.argv
+
+    if len(args) == 1:
+        ticker = args[0].upper()
+    elif len(args) == 0:
         ticker = DEFAULT_TICKER
     else:
-        print("Usage: python pulse.py [TICKER]")
-        print("Example: python pulse.py NVDA")
+        print("Usage: python pulse.py [TICKER] [--json] [--dry-run]", file=sys.stderr)
+        print("Example: python pulse.py NVDA", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Fetching data for {ticker}...")
+    if dry_run:
+        display_dry_run(ticker)
+        sys.exit(0)
+
+    if not json_output:
+        print(f"Fetching data for {ticker}...")
 
     api_data = fetch_stock_data(ticker)
 
     if not api_data or not api_data.get("data"):
-        print("Error: No data returned from API.")
+        if json_output:
+            print('{"error": "No data returned from API"}', file=sys.stderr)
+        else:
+            print("Error: No data returned from API.")
         sys.exit(1)
 
     if ticker not in api_data.get("data", {}):
-        print(f"Error: No data for {ticker}. Check the ticker symbol.")
+        if json_output:
+            print(f'{{"error": "No data for {ticker}"}}', file=sys.stderr)
+        else:
+            print(f"Error: No data for {ticker}. Check the ticker symbol.")
         sys.exit(1)
+
+    if json_output:
+        print(json.dumps(build_pulse_data(api_data, ticker), indent=2))
+        return
 
     display_pulse(api_data, ticker)
 

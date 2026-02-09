@@ -58,15 +58,33 @@ def fetch_pe_ratios(tickers: list[str]) -> dict:
         params={
             "tickers": ",".join(tickers),
             "metrics": "pe_ratio",
-            "period": "ttm",
+            "period": "ttm",       # Trailing Twelve Months
+            "price": "current",    # Recompute valuations at today's price
+            "years": 1,            # 1 year of history
         },
         headers={"Authorization": f"Bearer {API_KEY}"},
         timeout=30.0,
     )
 
+    if response.status_code == 401:
+        print("Error: Invalid API key. Check your METRICDUCK_API_KEY.")
+        sys.exit(1)
+
+    if response.status_code == 429:
+        retry_after = response.headers.get("Retry-After", "60")
+        print(f"Rate limit reached. Wait {retry_after}s and try again.")
+        sys.exit(1)
+
     if response.status_code != 200:
         print(f"Error: API returned {response.status_code}")
-        print(response.text)
+        try:
+            detail = response.json().get("detail", {})
+            if isinstance(detail, dict):
+                print(detail.get("error", "Unknown error"))
+            else:
+                print(str(detail)[:200])
+        except Exception:
+            print("Could not parse error response.")
         sys.exit(1)
 
     data = response.json()
