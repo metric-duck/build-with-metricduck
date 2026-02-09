@@ -4,6 +4,8 @@ Practical labs for building stock analysis tools with the [MetricDuck API](https
 
 **No API key required.** Guest access gives you all 70 metrics and 12 statistical dimensions.
 
+**Start here:** [Lab 02 - Stock Showdown](./labs/02-stock-showdown/) — compare two stocks in 30 seconds.
+
 ## Labs
 
 ### Free Labs (no API key needed)
@@ -11,21 +13,15 @@ Practical labs for building stock analysis tools with the [MetricDuck API](https
 | Lab | Description | What You'll Build |
 |-----|-------------|-------------------|
 | [02 - Stock Showdown](./labs/02-stock-showdown/) | Compare two stocks on Valuation + Quality | 2-panel comparison with 7 metrics (5 exclusive) |
-| [03 - Stock Pulse](./labs/03-stock-pulse/) | Check any stock vs its own 2-year history | Historical analysis with Q.MED8 and Q.TREND8 |
+| [03 - Stock Pulse](./labs/03-stock-pulse/) | Check any stock vs its own 2-year history | Value trap detector with Q.MED8 and Q.TREND8 |
+| [04 - Stock Screener](./labs/04-stock-screener/) | Rank 50+ stocks by Quality + Value | Composite scoring with percentile ranks |
 
-### Builder Labs (API key required, $29/mo)
+### Developer Labs (API key required)
 
 | Lab | Description | What You'll Build |
 |-----|-------------|-------------------|
 | [10 - PE Alert](./labs/10-pe-ratio-alert/) | Alert when PE drops below threshold | Automated valuation monitoring |
-| [11 - Dividend Yield Alert](./labs/11-dividend-yield-alert/) | Alert on dividend yield changes | Income investing alerts |
-| [12 - Quality Watchlist](./labs/12-quality-watchlist/) | Track ROIC and quality metrics | Portfolio quality monitoring |
-
-### Enterprise Labs
-
-| Lab | Description |
-|-----|-------------|
-| [50 - Enterprise Screener](./labs/50-enterprise-screener/) | Advanced screening with bulk data access |
+| [50 - Enterprise Screener](./labs/50-enterprise-screener/) | Advanced screening with bulk data access | Production data pipeline |
 
 ## Quick Start
 
@@ -37,6 +33,22 @@ python showdown.py NVDA AMD
 ```
 
 Works immediately. No API key, no signup, no config.
+
+Or try the stock screener:
+
+```bash
+cd labs/04-stock-screener
+pip install -r requirements.txt
+python screener.py
+```
+
+**What you'll see:**
+
+```
+PANEL 1: VALUATION  (Who's cheaper today?)
+PE Ratio                   37.18          24.99         MSFT ->
+EV/EBITDA                  23.97          18.29         MSFT ->
+```
 
 ## What MetricDuck Provides That yfinance Can't
 
@@ -52,10 +64,11 @@ Works immediately. No API key, no signup, no config.
 
 | Tier | Access | Cost |
 |------|--------|------|
-| Guest (no key) | All 70 metrics, 5 req/min | Free |
-| Free (registered) | 500 credits/month | Free |
-| Builder | 200,000 credits/month, 300 req/min | $29/mo |
-| Production | 1,000,000 credits/month, 1,000 req/min | $79/mo |
+| Guest (no key) | 5 requests/day, 10 tickers max | Free |
+| Free (registered) | 500 credits/day, 200 tickers | Free |
+| Developer | 200,000+ credits/month | From $29/mo |
+
+Free labs include a `--dry-run` flag to preview credit costs before calling the API.
 
 [Get an API key](https://www.metricduck.com/auth/register)
 

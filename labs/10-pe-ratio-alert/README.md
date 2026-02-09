@@ -6,7 +6,7 @@ This lab uses the MetricDuck API for higher accuracy data sourced directly from 
 
 **Requires:** MetricDuck Builder (D1) subscription - [$29/month](https://www.metricduck.com/pricing)
 
-> **New to stock alerts?** Start with [Lab 1: Free PE Alert](../01-free-pe-alert/) which requires no subscription.
+> **New to MetricDuck?** Try [Lab 02: Stock Showdown](../02-stock-showdown/) first — no API key needed.
 
 ## What You'll Build
 
@@ -184,4 +184,4 @@ Run automatically every day:
 
 - [MetricDuck API Docs](https://www.metricduck.com/docs)
 - [Available Metrics](https://www.metricduck.com/metrics)
-- [Next Lab: Dividend Yield Alert](../03-dividend-yield-alert/)
+- [Free Labs: Stock Showdown & Pulse](../02-stock-showdown/)

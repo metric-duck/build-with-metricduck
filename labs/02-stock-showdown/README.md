@@ -138,12 +138,13 @@ XBRL extraction. This means consistent cross-company comparisons, not scraped or
 ## Next Steps
 
 - **Lab 03: Stock Pulse** — Check any stock vs its own 2-year history
+- **Lab 04: Stock Screener** — Rank 50+ stocks by Quality + Value composite score
 - [Full metric catalog](https://www.metricduck.com/metrics) — Browse all 70 API metrics
 
 ## Troubleshooting
 
 **"Could not connect to MetricDuck API"** — Check your internet connection.
 
-**"Rate limit reached"** — Guest access allows 5 requests/minute. Wait and retry.
+**"Rate limit reached"** — Guest access allows 10 requests/minute. Wait and retry, or use `--dry-run` to preview without API calls.
 
 **Missing metric values (N/A)** — Some stocks don't report all metrics (e.g., banks may not have EBITDA or ROIC). The tool handles this gracefully.

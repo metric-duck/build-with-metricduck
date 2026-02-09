@@ -171,11 +171,12 @@ the rolling median across 8 quarters of actual filed data.
 ## Next Steps
 
 - **Lab 02: Stock Showdown** — Compare two stocks head-to-head
+- **Lab 04: Stock Screener** — Rank 50+ stocks by Quality + Value composite score
 - [Full metric catalog](https://www.metricduck.com/metrics) — Browse all 70 API metrics + 12 dimensions
 
 ## Troubleshooting
 
-**"Rate limit reached"** — Guest access allows 5 requests/minute. Wait and retry.
+**"Rate limit reached"** — Guest access allows 10 requests/minute. Wait and retry, or use `--dry-run` to preview without API calls.
 
 **"N/A" for some metrics** — Metrics like ROIC are not applicable for financial companies (banks, insurance). The diagnosis handles this gracefully.
 

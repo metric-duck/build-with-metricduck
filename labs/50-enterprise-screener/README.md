@@ -1,11 +1,11 @@
-# Lab 10: Enterprise Screener
+# Lab 50: Enterprise Screener
 
 Build a stock screener for your startup. All enterprise tiers have full universe and metrics access - credits are the only limiter.
 
 ## Quick Start
 
 ```bash
-cd labs/10-enterprise-screener
+cd labs/50-enterprise-screener
 pip install -r requirements.txt
 cp .env.example .env   # Add your API keys
 
@@ -240,4 +240,4 @@ Add secrets: `METRICDUCK_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
 
 ---
 
-*Data powered by [MetricDuck](https://metricduck.com)* (attribution required for Seed tier)
+*Data powered by [MetricDuck](https://metricduck.com)* (attribution required per tier terms)
