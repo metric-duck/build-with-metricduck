@@ -21,6 +21,7 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+nul
 
 # Logs
 *.log
@@ -31,3 +32,6 @@ labs/11-dividend-yield-alert/
 labs/12-quality-watchlist/
 labs/ROADMAP.md
 labs/DATA_QUALITY_REPORT.md
+
+# Internal testing data
+labs/02-stock-showdown/validation/
